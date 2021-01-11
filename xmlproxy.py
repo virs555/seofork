@@ -1,3 +1,4 @@
+from datetime import datetime
 import requests
 import xml.etree.cElementTree as ET
 
@@ -26,6 +27,7 @@ class XmlParser:
     def get_position(self, query, domain, region='213'):
         query = str(query)
         xml_doc = self._get_xml(query, domain, region)
+        date = datetime.now().date()
         if xml_doc:
             if xml_doc[0][0].tag == 'error':
                 print(f"{xml_doc[0][0].attrib['code']} {xml_doc[0][0].text}")
@@ -33,7 +35,7 @@ class XmlParser:
                 result_dic = {}
                 counter = 0
                 domain = domain
-                result_dic['response_date'] = xml_doc.find('response').attrib['date']
+                #result_dic['response_date'] = date
                 result_dic['query'] = query
                 for docs in xml_doc.iter('doc'):
                     counter += 1
@@ -51,4 +53,4 @@ class XmlParser:
 
 
 classXML = XmlParser()
-print(classXML.get_position('купить молоко', 'lenta.com'))
+#print(classXML.get_position('купить молоко', 'utkonos.ru'))
