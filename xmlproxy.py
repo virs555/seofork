@@ -27,7 +27,6 @@ class XmlParser:
     def get_position(self, query, domain, region='213'):
         query = str(query)
         xml_doc = self._get_xml(query, domain, region)
-        date = datetime.now().date()
         if xml_doc:
             if xml_doc[0][0].tag == 'error':
                 print(f"{xml_doc[0][0].attrib['code']} {xml_doc[0][0].text}")

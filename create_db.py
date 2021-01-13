@@ -1,4 +1,6 @@
 import psycopg2
+import database
+import config
 
 commands = (
     """
@@ -20,34 +22,21 @@ commands = (
     """,
 
     """
-    CREATE TABLE project_query(
-        project_query_id integer NOT NULL GENERATED ALWAYS AS IDENTITY,
-        query_id integer NOT NULL,
+    CREATE TABLE project_url(
+        project_query_url integer NOT NULL GENERATED ALWAYS AS IDENTITY,
         project_id integer NOT NULL,
-        PRIMARY KEY (project_query_id),
-        UNIQUE (query_id, project_id),
-        FOREIGN KEY (project_id)
-            REFERENCES projects (project_id)
-            ON UPDATE CASCADE 
-            ON DELETE CASCADE,
+        url character varying NOT NULL,
+        query_id integer NOT NULL,
+        PRIMARY KEY (project_id, query_id),
         FOREIGN KEY (query_id)
             REFERENCES queries (query_id)
             ON UPDATE CASCADE 
-            ON DELETE CASCADE
-    ) 
-    """,
-    """
-    CREATE TABLE project_url(
-        project_url_id integer NOT NULL GENERATED ALWAYS AS IDENTITY,
-        url character varying NOT NULL,
-        project_query_id integer NOT NULL,
-        PRIMARY KEY (project_url_id),
-        UNIQUE (project_query_id, url),
-        FOREIGN KEY (project_query_id)
-            REFERENCES project_query (project_query_id)
+            ON DELETE CASCADE,
+        FOREIGN KEY (project_id)
+            REFERENCES projects (project_id)
             ON UPDATE CASCADE 
             ON DELETE CASCADE
-        )
+    )
     """,  
 
     """
@@ -82,7 +71,7 @@ commands = (
 
 
 try:
-    conn = psycopg2.connect(dbname = "seofork", user = "postgres", password = "12345", host = "localhost", port = "5432")
+    conn = psycopg2.connect(dbname = config.DB_NAME, user = config.DB_USER, password = config.DB_PASS, host = config.DB_HOST, port = "5432")
 except:
     print("I am unable to connect to the database") 
 
@@ -91,7 +80,7 @@ cur = conn.cursor()
 for command in commands:
     cur.execute(command)
 
-conn.commit() # <--- makes sure the change is shown in the database
+conn.commit()
 conn.close()
 cur.close()
 

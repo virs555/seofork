@@ -1,4 +1,5 @@
 import database
+import xmlproxy
 
 query_data_list = [
             ["мороженное", "https://lenta.com/catalog/zamorozhennaya-produkciya/morozhenoe/"],
@@ -28,8 +29,24 @@ query_data_list = [
             ["холодец", "https://lddendta.com/myaso-ptica-kolbasa/delikatesy/kholodets_new-page"]
         ]
 db = database.DB()
-db.add_project('lenta.com') #Добавляем проект 1
-db.add_project('perekrestok.com') #Добавляем проект 2
-db.del_project('perekrestok.com') # Удаляем проект 2
-db.add_project_values(query_data_list, 'lenta.com') # Добавляем запросы к проекту lenta.com
-db.add_yandex_data('lenta.com') # Снимаем данные парсером для запросов проекта lenta.com
+db.add_project('okko.tv') #Добавляем проект 1
+db.add_project('re-store.ru') #Добавляем проект 2
+db.add_project('lenta.com')
+db.add_queries_by_project_id(query_data_list, 'lenta.com') # Добавляем запросы к проекту lenta.com
+classXML = xmlproxy.classXML
+
+# Снимаем данные парсером для запросов проекта lenta.com
+def get_yandex_position(project):
+    project_queries = db.get_queries_by_project_id(project)
+    if project_queries:
+        report_id = db.add_report(project)
+        yandex_position = []
+        for i in project_queries:
+            position = classXML.get_position(i[1], project)
+            position['report_id'] = report_id
+            position['query_id'] = i[0]
+            yandex_position.append(position) 
+        return yandex_position
+    return False
+yandex_position = get_yandex_position('lenta.com')
+db.add_yandex_data(yandex_position, 'lenta.com')
