@@ -1,6 +1,7 @@
 from datetime import datetime
 import requests
 import xml.etree.cElementTree as ET
+import logging
 
 import config
 

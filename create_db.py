@@ -42,7 +42,7 @@ commands = (
     """
     CREATE TABLE reports(
         report_id integer NOT NULL GENERATED ALWAYS AS IDENTITY,
-        report_date character varying NOT NULL,
+        report_date date NOT NULL,
         project_id integer NOT NULL,
         PRIMARY KEY (report_id),
         FOREIGN KEY (project_id)

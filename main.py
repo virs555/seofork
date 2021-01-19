@@ -1,6 +1,25 @@
 import database
 import xmlproxy
+import logging
 
+# create logger with 'spam_application'
+logger = logging.getLogger('main')
+logger.setLevel(logging.DEBUG)
+# create file handler which logs even debug messages
+fh = logging.FileHandler('seofork.log')
+fh.setLevel(logging.INFO)
+# create console handler with a higher log level
+ch = logging.StreamHandler()
+ch.setLevel(logging.INFO)
+# create formatter and add it to the handlers
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+fh.setFormatter(formatter)
+ch.setFormatter(formatter)
+# add the handlers to the logger
+logger.addHandler(fh)
+logger.addHandler(ch)
+
+from xmlproxy import classXML
 query_data_list = [
             ["мороженное", "https://lenta.com/catalog/zamorozhennaya-produkciya/morozhenoe/"],
             ["минеральная вода", "https://lenta.com/catalog/bezalkogolnye-napitki/voda/mineralnaya-voda_NEW-PAGE"],
@@ -30,7 +49,6 @@ query_data_list = [
         ]
 db = database.DB()
 db.add_project('okko.tv') #Добавляем проект 1
-db.add_project('re-store.ru') #Добавляем проект 2
 db.add_project('lenta.com')
 db.add_queries_by_project_id(query_data_list, 'lenta.com') # Добавляем запросы к проекту lenta.com
 classXML = xmlproxy.classXML
@@ -39,14 +57,19 @@ classXML = xmlproxy.classXML
 def get_yandex_position(project):
     project_queries = db.get_queries_by_project_id(project)
     if project_queries:
+        logger.info(f'Сбор позиций для {project} запущен')
         report_id = db.add_report(project)
+        print(report_id)
         yandex_position = []
         for i in project_queries:
             position = classXML.get_position(i[1], project)
             position['report_id'] = report_id
             position['query_id'] = i[0]
             yandex_position.append(position) 
+        logger.info(f'Сбор для {project} позиций завершен')
         return yandex_position
     return False
 yandex_position = get_yandex_position('lenta.com')
 db.add_yandex_data(yandex_position, 'lenta.com')
+db.get_from_date_report("2021-01-19", "lenta.com")
+db.close_connection()

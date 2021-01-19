@@ -1,10 +1,10 @@
 from datetime import datetime
 import psycopg2
-import psycopg2.errors
-import psycopg2.extras
+import logging
 
 import config
-from xmlproxy import classXML
+
+logger = logging.getLogger('main.database')
 
 class DB:
     
@@ -14,18 +14,18 @@ class DB:
             self.conn = psycopg2.connect(dbname=config.DB_NAME, user=config.DB_USER,
                                         password=config.DB_PASS, host=config.DB_HOST)
             self.cursor = self.conn.cursor()                     
-            print('Соединение с PostgreSQL установлено!')
+            logger.info('Соединение с PostgreSQL установлено!')
         except psycopg2.OperationalError:
-            print('Ошибка соединения с PostgreSQL')
+            logger.exception('Ошибка соединения с PostgreSQL')
 
     def add_project(self, project):
         try:
             sql = "INSERT INTO projects (project) VALUES (%s)"
             self.cursor.execute(sql, (project,))
             self.conn.commit()
-            print('Проект успешно добавлен!')
+            logger.info('Проект успешно добавлен!')
         except psycopg2.errors.UniqueViolation:
-            print('Проект уже существует!')
+            logger.exception('Проект уже существует!')
             self.conn.rollback()
 
         
@@ -35,12 +35,14 @@ class DB:
             project_id = str(self.cursor.fetchone()[0])
             return project_id
         except(TypeError):
-            print('Ошибка проекта! Добавьте проект.')
-            return False
+            logger.exception('Ошибка проекта! Добавьте проект.')
+            return None
+            
 
     def add_queries_by_project_id(self, query_data_list, project):
         project_id = self.get_project_id(project)
         if project_id:
+            logger.info(f'Добавляем запросы для {project} в базу')
             #Добавляем запросы в таблицу. Складываем id добавленых и уже существующих в query_list, добавляем связку query_id-project_id в таблицу.
             for i in query_data_list:
                 query_project = [0,0]
@@ -62,8 +64,9 @@ class DB:
         project_id = self.get_project_id(project)
         if project_id:
             self.cursor.execute("""
-                                SELECT queries.query_id, queries.query FROM queries 
-                                LEFT JOIN project_url
+                                SELECT queries.query_id, queries.query 
+                                FROM queries 
+                                JOIN project_url
                                 ON queries.query_id = project_url.query_id
                                 WHERE project_url.project_id = (%s);
             """, (project_id,))
@@ -78,14 +81,30 @@ class DB:
             report_data = [project_id, date]
             self.cursor.execute("INSERT INTO reports (project_id, report_date) VALUES (%s, %s) RETURNING report_id;", report_data)
             report_id = self.cursor.fetchone()
+            print(report_id)
             return report_id[0]
         return False
 
     def add_yandex_data(self, yandex_position, project):
         if yandex_position:
-            self.add_report(project)
-            print(f'---------------------{yandex_position}')
             for i in yandex_position:
                 self.cursor.execute("INSERT INTO yandex_results (query, report_id, position, url_page, query_id) VALUES (%(query)s, %(report_id)s ,%(position)s, %(url_page)s, %(query_id)s)", i)
             self.conn.commit()
         return False
+
+    def get_from_date_report(self, date, project):
+        project_id = self.get_project_id(project)
+        report_date = date
+        project_id_date = [project_id, report_date]
+        
+        self.cursor.execute("""
+    SELECT ya.query_id, ya.query, ya.url_page, ya.position, ya.report_id
+	FROM yandex_results AS ya 
+	WHERE ya.report_id = (SELECT MAX(rep.report_id) FROM reports as rep WHERE rep.project_id = (%s) AND rep.report_date = (%s))
+""", project_id_date)
+        print(self.cursor.fetchall())
+
+    def close_connection(self):
+        self.cursor.close()
+        self.conn.close()
+        logger.info('Соединение с PostgreSQL закрыто!')   
