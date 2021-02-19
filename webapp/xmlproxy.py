@@ -1,4 +1,4 @@
-from datetime import datetime
+from flask import current_app
 import requests
 import xml.etree.cElementTree as ET
 import logging

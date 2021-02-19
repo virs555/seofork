@@ -1,18 +1,19 @@
+from flask import current_app
 from datetime import datetime
 import psycopg2
 import logging
 
-import config
+import webapp.config
 
 logger = logging.getLogger('main.database')
 
+
 class DB:
-    
     def __init__(self):
         self.conn = None
         try:
-            self.conn = psycopg2.connect(dbname=config.DB_NAME, user=config.DB_USER,
-                                        password=config.DB_PASS, host=config.DB_HOST)
+            self.conn = psycopg2.connect(dbname=webapp.config.DB_NAME, user=webapp.config.DB_USER,
+                                        password=webapp.config.DB_PASS, host=webapp.config.DB_HOST)
             self.cursor = self.conn.cursor()                     
             logger.info('Соединение с PostgreSQL установлено!')
         except psycopg2.OperationalError:
@@ -102,7 +103,7 @@ class DB:
 	FROM yandex_results AS ya 
 	WHERE ya.report_id = (SELECT MAX(rep.report_id) FROM reports as rep WHERE rep.project_id = (%s) AND rep.report_date = (%s))
 """, project_id_date)
-        print(self.cursor.fetchall())
+        return self.cursor.fetchall()
 
     def close_connection(self):
         self.cursor.close()

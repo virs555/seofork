@@ -1,6 +1,8 @@
+from flask import current_app
 import database
 import xmlproxy
 import logging
+from xmlproxy import classXML
 
 # create logger with 'spam_application'
 logger = logging.getLogger('main')
@@ -19,7 +21,7 @@ ch.setFormatter(formatter)
 logger.addHandler(fh)
 logger.addHandler(ch)
 
-from xmlproxy import classXML
+
 query_data_list = [
             ["мороженное", "https://lenta.com/catalog/zamorozhennaya-produkciya/morozhenoe/"],
             ["минеральная вода", "https://lenta.com/catalog/bezalkogolnye-napitki/voda/mineralnaya-voda_NEW-PAGE"],
