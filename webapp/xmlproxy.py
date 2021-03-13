@@ -1,15 +1,16 @@
+from flask import current_app
 import requests
 import xml.etree.cElementTree as ET
+import logging
 
 import config
 
-XML_PROXY = 'https://xmlproxy.ru/search/xml'
 
 class XmlParser:
 
     def __init__(self):
         self.params = config.params
-        self.xml_proxy = XML_PROXY 
+        self.xml_proxy = config.XML_PROXY
 
     def _get_xml(self, query, domain, region):
         params = self.params
@@ -24,18 +25,17 @@ class XmlParser:
             print('Ошибка соединения с сервером данных')
             return False
 
-
     def get_position(self, query, domain, region='213'):
         query = str(query)
         xml_doc = self._get_xml(query, domain, region)
         if xml_doc:
             if xml_doc[0][0].tag == 'error':
-                print (f"{xml_doc[0][0].attrib['code']} {xml_doc[0][0].text}")
-            else:    
+                print(f"{xml_doc[0][0].attrib['code']} {xml_doc[0][0].text}")
+            else:
                 result_dic = {}
                 counter = 0
                 domain = domain
-                result_dic['response_date'] = xml_doc.find('response').attrib['date']
+                #result_dic['response_date'] = date
                 result_dic['query'] = query
                 for docs in xml_doc.iter('doc'):
                     counter += 1
@@ -51,5 +51,6 @@ class XmlParser:
                 return result_dic
         return False
 
+
 classXML = XmlParser()
-print(classXML.get_position('купить молоко', 'lenta.com'))
+#print(classXML.get_position('купить молоко', 'utkonos.ru'))
